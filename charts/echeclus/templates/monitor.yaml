@@ -1,0 +1,36 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: {{ template "cluster.name" . }}-echeclus
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: { { template "chart.name" . } }
+    app.kubernetes.io/managed-by: { { .Release.Service } }
+    app.kubernetes.io/instance: { { .Release.Name } }
+    app.kubernetes.io/component: discovery
+    helm.sh/chart: { { .Chart.Name } }-{{ .Chart.Version | replace "+"  "_" }}
+spec:
+  image: {{ .Values.image.prometheus }}
+  imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+  replicas: {{ .Values.replicas }}
+  resources: {{ toYaml .Values.resources | indent 10 }}
+  securityContext: {{ toYaml .Values.securityContext }}
+  serviceMonitorSelector: {}
+  podMonitorSelector: {}
+  scrapeInterval: {{ .Values.scrapeInterval | default "30s"}}
+  scrapeTimeout: {{ .Values.scrapeTimeout | default "30s"}}
+  shards: {{ .Values.shards | default 1}}
+  containers:
+    - name: "prometheus"
+      args:
+        - "--config.file=/etc/prometheus/config_out/prometheus.env.yaml"
+        - "--web.enable-lifecycle"
+        - "--storage.tsdb.retention.time=2d"
+      volumeMounts:
+        - mountPath: /netdata
+          name: netdata
+  volumes:
+    - hostPath:
+        path: /netdata
+        type: ""
+      name: "netdata"
