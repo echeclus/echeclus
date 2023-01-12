@@ -1,0 +1,6 @@
+apiVersion: v2
+name: echeclus
+description: A monitoring system using open-source community common solutions that can serve as a bypass monitoring for other monitoring systems.
+type: application
+version: 0.1.0
+appVersion: "1.16.0"
