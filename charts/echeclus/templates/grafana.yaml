@@ -1,0 +1,117 @@
+{{- if .Values.grafana }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "chart.name" . }}-grafana-echeclus
+  labels:
+    app.kubernetes.io/name: {{ template "chart.name" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: grafana
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+"  "_" }}
+spec:
+  ports:
+    - port: 3000
+      protocol: TCP
+      targetPort: 3000
+  selector:
+    app: grafana
+  sessionAffinity: None
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ template "chart.name" . }}-grafana-echeclus
+  labels:
+    app.kubernetes.io/name: {{ template "chart.name" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: grafana
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+"  "_" }}
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: .Values.grafana.url
+      http:
+        paths:
+          - pathType: ImplementationSpecific
+            path: /
+            backend:
+              service:
+                name: {{ template "chart.name" . }}-grafana-echeclus
+                port:
+                  number: 3000
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ template "chart.name" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: grafana
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+"  "_" }}
+  name: {{ template "chart.name" . }}-grafana-echeclus
+spec:
+  {{ with .Values.grafana }}}
+
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      securityContext:
+        fsGroup: 472
+        supplementalGroups:
+          - 0
+      containers:
+        - name: {{ template "chart.name" . }}-echeclus
+          image: {{ .image }}
+          imagePullPolicy: {{ .pullPolicy | default "IfNotPresent" }}
+          ports:
+            - containerPort: 3000
+              name: grafana
+              protocol: TCP
+          {{- if .resources }}
+          resources:
+          {{ toYaml .resources | indent 10 }}
+          {{- end }}
+          env:
+            - name: TZ
+              value: "UTC"
+          {{ if .config }}
+          {{- range $key, $value := .config }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+          {{- end }}
+          {{- end }}
+          volumeMounts:
+            - mountPath: /var/lib/grafana
+              name: bind1
+            - mountPath: /etc/grafana/provisioning/datasources
+              name: grafana-datasource
+            - name: grafana-provisioning-dashboards
+              mountPath: /etc/grafana/provisioning/dashboards
+      volumes:
+        - name: bind1
+          {{- if .persistent }}
+          persistentVolumeClaim:
+            claimName: data-{{ template "chart.name" . }}-echeclus
+          {{- else }}
+          emptyDir:
+          {{- end }}
+        - name: grafana-datasource
+          configMap:
+            name: grafana-datasource
+        - name: grafana-provisioning-dashboards
+          configMap:
+            name: grafana-provisioning-dashboards-config
+
+  {{- end }}}
+{{- end }}

@@ -1,14 +1,15 @@
+{{- if .Values.prometheus }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "cluster.name" . }}-echeclus
+  name: {{ template "chart.name" . }}-echeclus
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: { { template "chart.name" . } }
-    app.kubernetes.io/managed-by: { { .Release.Service } }
-    app.kubernetes.io/instance: { { .Release.Name } }
-    app.kubernetes.io/component: discovery
-    helm.sh/chart: { { .Chart.Name } }-{{ .Chart.Version | replace "+"  "_" }}
+    app.kubernetes.io/name: {{ template "chart.name" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: prometheus
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+"  "_" }}
 spec:
   ports:
     - name: web
@@ -17,3 +18,5 @@ spec:
   selector:
     app.kubernetes.io/name: prometheus
   sessionAffinity: ClientIP
+
+{{- end}}}

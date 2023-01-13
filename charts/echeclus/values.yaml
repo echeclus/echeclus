@@ -1,0 +1,43 @@
+metadata:
+  name: bypass
+  namespace: default
+
+timezone: "UTC"
+prometheus:
+    agent:
+      remoteWrite:
+        - url: https://localhost/api/v1/prometheus-remote-write
+          remoteTimeout: 30s
+    image: "prom/prometheus:v2.41.0"
+    pullPolicy: IfNotPresent
+
+    shards: 1
+    replicas: 1
+
+    scrapeInterval: "30s"
+    scrapeTimeout: "30s"
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 500m
+      limits:
+        cpu: 200m
+        memory: 800m
+    logLevel: info
+    reserveDays: 2
+grafana:
+  image: "grafana/grafana"
+  pullPolicy: IfNotPresent
+  persistent: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 500m
+    limits:
+      cpu: 200m
+      memory: 800m
+  config:
+    SERVER_PROTOCOL: "http"
+    SERVER_http_port: "3000"
+    DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: "1"
