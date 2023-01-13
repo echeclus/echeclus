@@ -1,0 +1,26 @@
+metadata:
+  name: bypass
+  namespace: default
+prometheus:
+    agent:
+      remoteWrite:
+        - url: https://localhost/api/v1/prometheus-remote-write
+          remoteTimeout: 30s
+    image: "prom/prometheus:v2.41.0"
+    pullPolicy: IfNotPresent
+
+    shards: 1
+    replicas: 1
+
+    scrapeInterval: "30s"
+    scrapeTimeout: "30s"
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 500m
+    limits:
+      cpu: 200m
+      memory: 800m
+    logLevel: info
+    reserveDays: 2

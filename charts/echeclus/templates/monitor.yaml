@@ -1,36 +1,51 @@
+{{- if .Values.prometheus }}
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
-  name: {{ template "cluster.name" . }}-echeclus
+  name: {{ template "chart.name" . }}-echeclus
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: { { template "chart.name" . } }
-    app.kubernetes.io/managed-by: { { .Release.Service } }
-    app.kubernetes.io/instance: { { .Release.Name } }
-    app.kubernetes.io/component: discovery
-    helm.sh/chart: { { .Chart.Name } }-{{ .Chart.Version | replace "+"  "_" }}
+    app.kubernetes.io/name: {{ template "chart.name" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: prometheus
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+"  "_" }}
+  {{- with .Values.prometheus}}}
 spec:
-  image: {{ .Values.image.prometheus }}
-  imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
-  replicas: {{ .Values.replicas }}
-  resources: {{ toYaml .Values.resources | indent 10 }}
-  securityContext: {{ toYaml .Values.securityContext }}
+  image: {{ .image }}
+  imagePullPolicy: {{ .pullPolicy | default "IfNotPresent" }}
+  replicas: {{ .replicas | default 1}}
+  resources:
+{{ toYaml .resources | indent 10 }}
+  securityContext:
+    runAsUser: 0
   serviceMonitorSelector: {}
   podMonitorSelector: {}
-  scrapeInterval: {{ .Values.scrapeInterval | default "30s"}}
-  scrapeTimeout: {{ .Values.scrapeTimeout | default "30s"}}
-  shards: {{ .Values.shards | default 1}}
+  scrapeInterval: {{ .scrapeInterval | default "30s"}}
+  scrapeTimeout: {{ .scrapeTimeout | default "30s"}}
+  shards: {{ .shards | default 1}}
   containers:
     - name: "prometheus"
       args:
         - "--config.file=/etc/prometheus/config_out/prometheus.env.yaml"
         - "--web.enable-lifecycle"
-        - "--storage.tsdb.retention.time=2d"
-      volumeMounts:
-        - mountPath: /netdata
-          name: netdata
+        - "log.level={{ .logLevel }}"
+        {{- if .agent }}}
+        - "--enable-feature=agent"
+        {{- end }}
+        - "--storage.tsdb.retention.time={{.reserveDays | default 2 }}d"
+  {{- if .agent }}}
+  remoteWrite: {{ toYaml .agent.remoteWrite | indent 12 }}
+  {{- else }}
+        volumeMounts:
+          - mountPath: /netdata
+            name: netdata
   volumes:
     - hostPath:
         path: /netdata
         type: ""
       name: "netdata"
+  {{- end }}
+
+{{- end }}
+{{- end }}
