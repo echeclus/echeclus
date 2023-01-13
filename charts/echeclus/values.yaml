@@ -1,6 +1,8 @@
 metadata:
   name: bypass
   namespace: default
+
+timezone: "UTC"
 prometheus:
     agent:
       remoteWrite:
@@ -19,8 +21,23 @@ prometheus:
       requests:
         cpu: 100m
         memory: 500m
+      limits:
+        cpu: 200m
+        memory: 800m
+    logLevel: info
+    reserveDays: 2
+grafana:
+  image: "grafana/grafana"
+  pullPolicy: IfNotPresent
+  persistent: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 500m
     limits:
       cpu: 200m
       memory: 800m
-    logLevel: info
-    reserveDays: 2
+  config:
+    SERVER_PROTOCOL: "http"
+    SERVER_http_port: "3000"
+    DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: "1"
