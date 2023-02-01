@@ -41,3 +41,12 @@ grafana:
     SERVER_PROTOCOL: "http"
     SERVER_http_port: "3000"
     DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: "1"
+  provisioning:
+    datasource:
+      apiVersion: 1
+      datasources:
+        - name: prometheus
+          version: 1
+          type: prometheus
+          url: prometheus:9090
+          httpMethod: post

@@ -1,0 +1,19 @@
+{{- if .Values.grafana }}
+apiVersion: v1
+kind: configMap
+metadata:
+  name: {{ template "chart.name" . }}-grafana-echeclus
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ template "chart.name" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: grafana
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+"  "_" }}
+data:
+  datasource-config: |-
+{{toYaml .Values.grafana.provisioning.datasource | indent 30 }}
+  dashboard-config: |-
+{{ tuple "config/_grafana-dashboard.tpl" . }}
+
+{{- end }}

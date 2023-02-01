@@ -44,7 +44,6 @@ spec:
                 port:
                   number: 3000
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -95,8 +94,8 @@ spec:
             - mountPath: /var/lib/grafana
               name: bind1
             - mountPath: /etc/grafana/provisioning/datasources
-              name: grafana-datasource
-            - name: grafana-provisioning-dashboards
+              name: provisioning-datasource
+            - name: provisioning-dashboards
               mountPath: /etc/grafana/provisioning/dashboards
       volumes:
         - name: bind1
@@ -106,12 +105,17 @@ spec:
           {{- else }}
           emptyDir:
           {{- end }}
-        - name: grafana-datasource
+        - name: provisioning-datasource
           configMap:
-            name: grafana-datasource
-        - name: grafana-provisioning-dashboards
+            name: {{ template "chart.name" . }}}-grafana-echeclus
+            items:
+              - key: datasource-config
+                path: datasource.yaml
+        - name: provisioning-dashboards
           configMap:
-            name: grafana-provisioning-dashboards-config
-
+            name: {{ template "chart.name" . }}}-grafana-echeclus
+            items:
+              - key: dashboard-config
+                path: dashboard.yaml
   {{- end }}}
 {{- end }}
